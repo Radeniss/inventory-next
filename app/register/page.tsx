@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -24,20 +23,27 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.signUp(formData);
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
 
-      if (error) {
-        toast({
-          title: 'Error',
-          description: error.message || 'Failed to register',
-          variant: 'destructive',
-        });
-      } else {
+      if (response.ok) {
         toast({
           title: 'Success',
-          description: 'Registered successfully! Please check your email to confirm your account.',
+          description: 'Registered successfully! You can now login.',
         });
-        router.push('/');
+        router.push('/login');
+      } else {
+        const error = await response.json();
+        toast({
+          title: 'Error',
+          description: error.error || 'Failed to register',
+          variant: 'destructive',
+        });
       }
     } catch (error: any) {
       toast({

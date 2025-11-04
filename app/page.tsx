@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { Toaster } from '@/components/ui/toaster';
 import InventoryList from './InventoryList';
 import { useSession } from '@/hooks/use-session';
-import { supabase } from '@/lib/supabase';
 
 interface InventoryItem {
   id: string;
@@ -20,19 +19,19 @@ interface InventoryItem {
 }
 
 export default function Home() {
-  const { session, loading } = useSession();
+  const { user, loading } = useSession();
   const router = useRouter();
   const [items, setItems] = useState<InventoryItem[]>([]);
 
   useEffect(() => {
-    if (!loading && !session) {
+    if (!loading && !user) {
       router.push('/login');
     }
-  }, [session, loading, router]);
+  }, [user, loading, router]);
 
   useEffect(() => {
     const getItems = async () => {
-      if (session) {
+      if (user) {
         try {
           const response = await fetch('/api/inventory');
           if (response.ok) {
@@ -48,14 +47,14 @@ export default function Home() {
     };
 
     getItems();
-  }, [session]);
+  }, [user]);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    await fetch('/api/auth/logout', { method: 'POST' });
     router.push('/login');
   };
 
-  if (loading || !session) {
+  if (loading || !user) {
     return <p>Loading...</p>; // Or a proper loading spinner
   }
 
