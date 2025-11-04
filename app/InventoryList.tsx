@@ -35,15 +35,13 @@ interface InventoryItem {
   created_at: string;
 }
 
-// Definisikan Props untuk menerima data awal
 interface InventoryListProps {
   initialItems: InventoryItem[];
 }
 
 export default function InventoryList({ initialItems }: InventoryListProps) {
-  // Gunakan initialItems sebagai nilai awal state
   const [items, setItems] = useState<InventoryItem[]>(initialItems);
-  const [loading, setLoading] = useState(false); // Set false karena data awal sudah dimuat
+  const [loading, setLoading] = useState(false);
   const [editItem, setEditItem] = useState<InventoryItem | null>(null);
   const [editFormData, setEditFormData] = useState({
     name: '',
@@ -78,20 +76,8 @@ export default function InventoryList({ initialItems }: InventoryListProps) {
     }
   }, [toast]);
 
-  // useEffect untuk memastikan data diperbarui jika ada perubahan di luar (meskipun initialItems sudah ada)
-  // Untuk penggunaan dasar, useEffect ini bisa dihapus jika Anda hanya mengandalkan fetchItems() setelah mutasi
-  /*
-  useEffect(() => {
-    // Jika data awal kosong, coba fetch. Jika ada data, skip initial fetch.
-    if (initialItems.length === 0) {
-      fetchItems();
-    }
-  }, [fetchItems, initialItems]);
-  */
 
   const handleDelete = async (id: string) => {
-    // Gunakan modal kustom untuk konfirmasi, bukan window.confirm
-    // (Karena instruksi melarang alert/confirm, kita tetap pakai if (!confirm) untuk kesederhanaan, tapi idealnya pakai Dialog)
     if (!confirm('Are you sure you want to delete this item?')) return;
 
     try {
@@ -104,7 +90,7 @@ export default function InventoryList({ initialItems }: InventoryListProps) {
           title: 'Success',
           description: 'Item deleted successfully',
         });
-        fetchItems(); // Panggil ulang untuk memuat data terbaru
+        fetchItems();
       } else {
         toast({
           title: 'Error',
@@ -150,8 +136,7 @@ export default function InventoryList({ initialItems }: InventoryListProps) {
           description: 'Item updated successfully',
         });
         setEditItem(null);
-        fetchItems(); // Panggil ulang untuk memuat data terbaru
-      } else {
+        fetchItems(); 
         const error = await response.json();
         toast({
           title: 'Error',

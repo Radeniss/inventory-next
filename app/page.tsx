@@ -16,17 +16,14 @@ interface InventoryItem {
 
 // Fungsi Fetching Data dari API Route
 const getInitialItems = async (): Promise<InventoryItem[]> => {
-  // Panggil API Route internal kita untuk mengambil data inventori
   try {
     const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/inventory`, {
-      // Menggunakan 'force-cache' atau 'no-store' tergantung kebutuhan.
-      // 'no-store' memastikan data selalu baru.
+
       cache: 'no-store', 
     });
 
     if (!response.ok) {
       console.error('Failed to fetch inventory data on server:', response.statusText);
-      // Jika gagal, kembalikan array kosong agar aplikasi tidak crash
       return []; 
     }
     
@@ -62,7 +59,6 @@ export default async function Home() {
         <div className="mb-6 flex justify-between items-center">
           {/* Total Items akan ditampilkan di dalam InventoryList */}
           <div className="text-sm text-slate-600">
-            {/* Placeholder for total items */}
           </div>
           <Link href="/add">
             <Button className="bg-slate-900 hover:bg-slate-800">
