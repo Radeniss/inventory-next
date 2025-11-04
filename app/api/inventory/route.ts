@@ -56,6 +56,9 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
+      // Log error dari Supabase (termasuk error kode 23505)
+      console.error('Supabase Error on Insert:', error); 
+      
       if (error.code === '23505') {
         return NextResponse.json(
           { error: 'Item with this name already exists' },
@@ -70,10 +73,11 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(data, { status: 201 });
   } catch (error) {
-        console.error(error);
-        return NextResponse.json(
-          { error: 'Internal server error' },
-          { status: 500 }
-        );
-      }
-    }
+    // Log error runtime tak terduga (misalnya JSON parsing error)
+    console.error('Runtime Error in POST Handler:', error); 
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
