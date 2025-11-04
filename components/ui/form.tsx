@@ -41,15 +41,31 @@ const FormField = <
   );
 };
 
+type FormItemContextValue = {
+  id: string;
+};
+
+const FormItemContext = React.createContext<FormItemContextValue>(
+  {} as FormItemContextValue
+);
+
 const useFormField = () => {
   const fieldContext = React.useContext(FormFieldContext);
   const itemContext = React.useContext(FormItemContext);
   const { getFieldState, formState } = useFormContext();
+  let fieldState;
 
-  const fieldState = getFieldState(fieldContext.name, formState);
+  try {
+    fieldState = getFieldState(fieldContext.name, formState);
+  } catch (e) {
+    console.error('Form Hook Error: Failed to get field state.', e);
+  }
 
   if (!fieldContext) {
-    throw new Error('useFormField should be used within <FormField>');
+    // Ini adalah error penggunaan yang paling umum, yang di-throw
+    const usageError = new Error('useFormField should be used within <FormField>');
+    console.error(usageError.message);
+    throw usageError;
   }
 
   const { id } = itemContext;
@@ -63,14 +79,6 @@ const useFormField = () => {
     ...fieldState,
   };
 };
-
-type FormItemContextValue = {
-  id: string;
-};
-
-const FormItemContext = React.createContext<FormItemContextValue>(
-  {} as FormItemContextValue
-);
 
 const FormItem = React.forwardRef<
   HTMLDivElement,
@@ -147,8 +155,13 @@ const FormMessage = React.forwardRef<
   HTMLParagraphElement,
   React.HTMLAttributes<HTMLParagraphElement>
 >(({ className, children, ...props }, ref) => {
-  const { error, formMessageId } = useFormField();
+  const { error, formMessageId, name } = useFormField();
   const body = error ? String(error?.message) : children;
+
+  if (error && !body) {
+    // Log jika ada error tapi tidak ada pesan yang disediakan
+    console.error(`FormMessage: Error found for field '${name}', but message is empty or null.`);
+  }
 
   if (!body) {
     return null;

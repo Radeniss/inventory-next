@@ -29,6 +29,12 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { name, quantity, description } = body;
 
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     if (!name || name.trim() === '') {
       return NextResponse.json(
         { error: 'Name is required' },
@@ -50,6 +56,7 @@ export async function POST(request: NextRequest) {
           name: name.trim(),
           quantity,
           description: description || '',
+          user_id: user.id,
         },
       ])
       .select()
