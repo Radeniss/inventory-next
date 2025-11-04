@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { prisma } from '@/lib/prisma';
 import jwt from 'jsonwebtoken';
 import { cookies } from 'next/headers';
 
@@ -32,19 +32,23 @@ export async function PUT(
     const { id } = params;
     const { name, quantity, description } = await request.json();
 
-    const { rows } = await db.query(
-      'UPDATE inventory_items SET name = $1, quantity = $2, description = $3 WHERE id = $4 AND user_id = $5 RETURNING *',
-      [name, quantity, description, id, userId]
-    );
+    const updatedItem = await prisma.inventoryItem.updateMany({
+      where: { id, user_id: userId },
+      data: {
+        name,
+        quantity,
+        description,
+      },
+    });
 
-    if (rows.length === 0) {
+    if (updatedItem.count === 0) {
       return NextResponse.json({ error: 'Item not found or not owned by user' }, { status: 404 });
     }
 
-    return NextResponse.json(rows[0], { status: 200 });
+    return NextResponse.json(updatedItem, { status: 200 });
   } catch (error) {
     console.error('Error updating inventory item:', error);
-    if (error.code === '23505') {
+    if (error.code === 'P2002') {
       return NextResponse.json({ error: 'Item with this name already exists' }, { status: 400 });
     }
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -63,12 +67,11 @@ export async function DELETE(
 
     const { id } = params;
 
-    const { rows } = await db.query(
-      'DELETE FROM inventory_items WHERE id = $1 AND user_id = $2 RETURNING *',
-      [id, userId]
-    );
+    const deletedItem = await prisma.inventoryItem.deleteMany({
+      where: { id, user_id: userId },
+    });
 
-    if (rows.length === 0) {
+    if (deletedItem.count === 0) {
       return NextResponse.json({ error: 'Item not found or not owned by user' }, { status: 404 });
     }
 

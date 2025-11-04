@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { prisma } from '@/lib/prisma';
 import jwt from 'jsonwebtoken';
 import { cookies } from 'next/headers';
 
@@ -26,12 +26,12 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { rows } = await db.query(
-      'SELECT * FROM inventory_items WHERE user_id = $1 ORDER BY created_at DESC',
-      [userId]
-    );
+    const inventoryItems = await prisma.inventoryItem.findMany({
+      where: { user_id: userId },
+      orderBy: { created_at: 'desc' },
+    });
 
-    return NextResponse.json(rows, { status: 200 });
+    return NextResponse.json(inventoryItems, { status: 200 });
   } catch (error) {
     console.error('Error fetching inventory items:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -58,15 +58,19 @@ export async function POST(request: Request) {
       );
     }
 
-    const { rows } = await db.query(
-      'INSERT INTO inventory_items (name, quantity, description, user_id) VALUES ($1, $2, $3, $4) RETURNING *',
-      [name.trim(), quantity, description || '', userId]
-    );
+    const newItem = await prisma.inventoryItem.create({
+      data: {
+        name: name.trim(),
+        quantity,
+        description: description || '',
+        user_id: userId,
+      },
+    });
 
-    return NextResponse.json(rows[0], { status: 201 });
+    return NextResponse.json(newItem, { status: 201 });
   } catch (error) {
     console.error('Error creating inventory item:', error);
-    if (error.code === '23505') {
+    if (error.code === 'P2002') {
       return NextResponse.json({ error: 'Item with this name already exists' }, { status: 400 });
     }
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
